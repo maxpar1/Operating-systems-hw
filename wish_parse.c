@@ -34,8 +34,12 @@ char *wish_unquote(char * s) {
 }
 
 void wish_assign(char *name, char *value) {
-  setenv(name, value, 1); 
-  printf("setenv");
+  int env_state = setenv(name, value, 1); 
+  if (env_state){
+  	perror("setenv");
+  }
+  free(name);
+  free(value);
 }
 // Do not modify this function
 void yyerror(const char* s) {
@@ -43,15 +47,12 @@ void yyerror(const char* s) {
 }
 
 char *wish_safe_getenv(char *s) {
-  printf("THIS IS A TEST");
   char* p = getenv(s);
   if(p== NULL){
-    char* empty = malloc(1);
-    empty[0] = '\n';
-    return empty;
+    return "";
   }
   else{
-    return strdup(p);
+    return p;
   }
 }
   // Find the first program on the command line
@@ -87,61 +88,120 @@ prog_t *create_program(arglist_t al)
   return p;
 }
 
+int handle_child(pid_t pid, int bgmode){
+	if (bgmode){
+		return 0;
+	}
+	int status;
+	if (waitpid(pid, &status, 0)==-1){
+		perror("waitpid error");
+		return 1;
+	}
+	if (!WIFEXITED(status)){
+		return 1;
+	}
+	size_t size = 32;
+	char* new_value = malloc(size*sizeof(char));
+	snprintf(new_value, size, "%d", WEXITSTATUS(status));
+	if (setenv("_", new_value, 1)){
+		free(new_value);
+		return 1;
+	}
+	free(new_value);
+	return 0;
+}
+
+static void dup_me (int new, int old){
+	if (new != old && -1 == dup2(new, old)){
+		perror("dup2");
+		exit(1);
+	}
+}
+
+static void start(prog_t *exe){
+	arglist_t args = exe->args;
+	args.args = super_realloc(args.args, sizeof(char*)*(args.size+1));
+	args.args[args.size]=(char*)NULL;
+	execvp(args.args[0], args.args);
+	perror(args.args[0]);
+}
+
+static size_t cmd_length(prog_t *exe){
+	int count = 0;
+	while (exe){
+		exe = exe->prev;
+		count++;
+	}
+	return count;
+}
 
 int spawn(prog_t *exe, int bgmode) {
-    int status = 0; // NOTE initialize your data, otherwise loop occurs when reading config
-    pid_t pid = fork();
-    if (pid < 0) { // NOTE changed from == -1, its not guarenteed
-        perror("fork");
-	status = 1; // NOTE directed return to end of function
-    } else if (pid == 0) {
-        // Using a hardcoded command for testing
-	// char *testArgs[] = {"echo", "THIS IS A TEST", NULL}; 
-	exe->args = add_to_arglist(exe->args, NULL); // NOTE, this does the missing step in the aassignment
-        if (execvp(exe->args.args[0], exe->args.args) == -1) {
-            perror("execvp");
-	    status = 1;
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        /*if (!bgmode) { NOTE maybe yeet this entire case
-            do {
-                waitpid(pid, &status, WUNTRACED);
-            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-        }
-	status = 1;
-	*/
-    }
-    fputs("SYSTEM GHOST: Memory cleanup placeholder\n", stderr);
-
-    return status; //NOTE return status, 
+	int length = cmd_length(exe);
+	pid_t processes[length];
+	int process = 0;
+	int out = STDOUT_FILENO;
+	for (prog_t* i = exe;i!=NULL;i = i->prev){
+		int pipefd[2] = {STDIN_FILENO, out};
+		if (i->prev != NULL){
+			if (pipe(pipefd) == -1){
+				perror("pipe error");
+				return 1;
+			}
+		}
+		pid_t pid = fork();
+		processes[process] = pid;
+		process++;
+		if (pid < 0) {
+        	perror("fork");
+			return 1;
+		} else if (pid == 0) {
+			dup_me(pipefd[0], STDIN_FILENO);
+			dup_me(out, STDOUT_FILENO);
+			if (pipefd[1] != STDOUT_FILENO){
+				close(pipefd[1]);
+			}
+			start(i);
+			_exit(EXIT_FAILURE);
+    	} else {
+			if (pipefd[0] != STDIN_FILENO){
+				close(pipefd[0]);
+			}
+			if (out != STDOUT_FILENO){
+				close(out);
+			}
+			out = pipefd[1];
+   		}
+	}
+	int status = 0;
+	if (bgmode == 0){
+		for (int i = 0;i<process;++i){
+			if (handle_child(processes[i], bgmode)){
+				status = 1;
+			}
+		}
+	}
+	if (out != STDOUT_FILENO){
+		close(out);
+	}
+	free_memory(exe);
+	return status;
 }
 
 
-  /*
-    1. Fork a child process.
-
-    2. In the child process, add another element to the array of
-    arguments with realloc() and set that element to NULL. This is the
-    format expected by system call execvp().
-
-    3. In the child process, start new program, as defined by
-    exe->args.args[0]. If execvp() fails, the function shall exit(0).
-    Remember, only the child terminates, the parent keeps running!
-    
-    4. In the parent process, free any previously allocated memory by
-    calling void free_memory(prog_t *exe, prog_t *pipe). Do not
-    implement this function now, just call its do-nothing skeleton.
-    You may want to add some printout to the body of the function to
-    make sure that it was actually called.  
-
-    5. Report any errors with perror() and return 1 in the parent if
-    there was an error or 0, otherwise.
-  */
-
-void free_memory(prog_t *exe, prog_t *pipe)
+void free_memory(prog_t *exe)
 {
-  fputs("\nSYSTEM GHOST: I am a skeleton, just call me where necessary\n",
-	stderr);
+	if (!exe) return;
+	for(int i = 0; i < exe->args.size; i++)
+		free(exe->args.args[i]);
+	free(exe->args.args);
+	if(exe->redirection.in)
+		free(exe->redirection.in);
+	if(exe->redirection.out1)
+		free(exe->redirection.out1);
+	if(exe->redirection.out2)
+		free(exe->redirection.out2);
+	prog_t* prev = exe->prev;
+	free (exe);
+	free_memory(prev);
 }
 

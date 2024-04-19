@@ -1124,152 +1124,158 @@ yyreduce:
 #line 1125 "wish_yyparser.tab.c"
     break;
 
+  case 5: /* cmdline: YY_TOK YY_SET YY_TOK  */
+#line 39 "wish_yyparser.y"
+                       { wish_assign((yyvsp[-2].s), (yyvsp[0].s)); }
+#line 1131 "wish_yyparser.tab.c"
+    break;
+
   case 9: /* cmdline: YY_EXIT  */
 #line 43 "wish_yyparser.y"
                        { wish_exit = 1; }
-#line 1131 "wish_yyparser.tab.c"
+#line 1137 "wish_yyparser.tab.c"
     break;
 
   case 10: /* pipe: YY_BAR out_exe  */
 #line 46 "wish_yyparser.y"
                   { (yyval.exe) = (yyvsp[0].exe);}
-#line 1137 "wish_yyparser.tab.c"
+#line 1143 "wish_yyparser.tab.c"
     break;
 
   case 11: /* pipe: pipe YY_BAR out_exe  */
 #line 47 "wish_yyparser.y"
                       { (yyval.exe) = (yyvsp[0].exe); (yyval.exe)->prev = (yyvsp[-2].exe);}
-#line 1143 "wish_yyparser.tab.c"
+#line 1149 "wish_yyparser.tab.c"
     break;
 
   case 12: /* redir_exe: exe  */
 #line 50 "wish_yyparser.y"
                 { (yyval.exe) = (yyvsp[0].exe); }
-#line 1149 "wish_yyparser.tab.c"
+#line 1155 "wish_yyparser.tab.c"
     break;
 
   case 13: /* redir_exe: exe any_redir  */
 #line 51 "wish_yyparser.y"
                 { (yyval.exe) = (yyvsp[-1].exe); (yyval.exe)->redirection = (yyvsp[0].redir); }
-#line 1155 "wish_yyparser.tab.c"
+#line 1161 "wish_yyparser.tab.c"
     break;
 
   case 14: /* in_exe: exe  */
 #line 54 "wish_yyparser.y"
                 { (yyval.exe) = (yyvsp[0].exe); }
-#line 1161 "wish_yyparser.tab.c"
+#line 1167 "wish_yyparser.tab.c"
     break;
 
   case 15: /* in_exe: exe in_redir  */
 #line 55 "wish_yyparser.y"
                 { (yyval.exe) = (yyvsp[-1].exe); (yyval.exe)->redirection = (yyvsp[0].redir); }
-#line 1167 "wish_yyparser.tab.c"
+#line 1173 "wish_yyparser.tab.c"
     break;
 
   case 16: /* out_exe: exe  */
 #line 58 "wish_yyparser.y"
                 { (yyval.exe) = (yyvsp[0].exe); }
-#line 1173 "wish_yyparser.tab.c"
+#line 1179 "wish_yyparser.tab.c"
     break;
 
   case 17: /* out_exe: exe out_redir  */
 #line 59 "wish_yyparser.y"
                 { (yyval.exe) = (yyvsp[-1].exe); (yyval.exe)->redirection = (yyvsp[0].redir); }
-#line 1179 "wish_yyparser.tab.c"
+#line 1185 "wish_yyparser.tab.c"
     break;
 
   case 18: /* inout_redir: in_redir out_redir  */
 #line 62 "wish_yyparser.y"
                      { (yyval.redir).in = (yyvsp[-1].redir).in; (yyval.redir).out1 = (yyvsp[0].redir).out1; (yyval.redir).out2 = (yyvsp[0].redir).out2; }
-#line 1185 "wish_yyparser.tab.c"
+#line 1191 "wish_yyparser.tab.c"
     break;
 
   case 19: /* inout_redir: out_redir in_redir  */
 #line 63 "wish_yyparser.y"
                      { (yyval.redir).in = (yyvsp[0].redir).in; (yyval.redir).out1 = (yyvsp[-1].redir).out1; (yyval.redir).out2 = (yyvsp[-1].redir).out2; }
-#line 1191 "wish_yyparser.tab.c"
+#line 1197 "wish_yyparser.tab.c"
     break;
 
   case 20: /* out_redir: out1_redir  */
 #line 66 "wish_yyparser.y"
              { (yyval.redir) = (yyvsp[0].redir); }
-#line 1197 "wish_yyparser.tab.c"
+#line 1203 "wish_yyparser.tab.c"
     break;
 
   case 21: /* out_redir: out2_redir  */
 #line 67 "wish_yyparser.y"
              { (yyval.redir) = (yyvsp[0].redir); }
-#line 1203 "wish_yyparser.tab.c"
+#line 1209 "wish_yyparser.tab.c"
     break;
 
   case 22: /* any_redir: in_redir  */
 #line 70 "wish_yyparser.y"
               { (yyval.redir) = (yyvsp[0].redir); }
-#line 1209 "wish_yyparser.tab.c"
+#line 1215 "wish_yyparser.tab.c"
     break;
 
   case 23: /* any_redir: out_redir  */
 #line 71 "wish_yyparser.y"
               { (yyval.redir) = (yyvsp[0].redir); }
-#line 1215 "wish_yyparser.tab.c"
+#line 1221 "wish_yyparser.tab.c"
     break;
 
   case 24: /* any_redir: inout_redir  */
 #line 72 "wish_yyparser.y"
               { (yyval.redir) = (yyvsp[0].redir); }
-#line 1221 "wish_yyparser.tab.c"
+#line 1227 "wish_yyparser.tab.c"
     break;
 
   case 25: /* in_redir: YY_LESS YY_TOK  */
 #line 74 "wish_yyparser.y"
                                { (yyval.redir).in = (yyvsp[0].s); (yyval.redir).out1 = (yyval.redir).out2 = NULL; }
-#line 1227 "wish_yyparser.tab.c"
+#line 1233 "wish_yyparser.tab.c"
     break;
 
   case 26: /* out1_redir: YY_MORE YY_TOK  */
 #line 75 "wish_yyparser.y"
                                { (yyval.redir).out1 = (yyvsp[0].s); (yyval.redir).in = (yyval.redir).out2 = NULL; }
-#line 1233 "wish_yyparser.tab.c"
+#line 1239 "wish_yyparser.tab.c"
     break;
 
   case 27: /* out2_redir: YY_MOREMORE YY_TOK  */
 #line 76 "wish_yyparser.y"
                                { (yyval.redir).out2 = (yyvsp[0].s); (yyval.redir).in = (yyval.redir).out1 = NULL; }
-#line 1239 "wish_yyparser.tab.c"
+#line 1245 "wish_yyparser.tab.c"
     break;
 
   case 28: /* bg_mode: %empty  */
 #line 79 "wish_yyparser.y"
          { (yyval.i) = 0; }
-#line 1245 "wish_yyparser.tab.c"
+#line 1251 "wish_yyparser.tab.c"
     break;
 
   case 29: /* bg_mode: YY_AMP  */
 #line 80 "wish_yyparser.y"
          { (yyval.i) = 1; }
-#line 1251 "wish_yyparser.tab.c"
+#line 1257 "wish_yyparser.tab.c"
     break;
 
   case 30: /* exe: args  */
 #line 83 "wish_yyparser.y"
      { (yyval.exe) = create_program((yyvsp[0].alist)); }
-#line 1257 "wish_yyparser.tab.c"
+#line 1263 "wish_yyparser.tab.c"
     break;
 
   case 31: /* args: YY_TOK  */
 #line 86 "wish_yyparser.y"
             { (yyval.alist) = create_arglist((yyvsp[0].s)); }
-#line 1263 "wish_yyparser.tab.c"
+#line 1269 "wish_yyparser.tab.c"
     break;
 
   case 32: /* args: args YY_TOK  */
 #line 87 "wish_yyparser.y"
               { (yyval.alist) = add_to_arglist((yyvsp[-1].alist), (yyvsp[0].s)); }
-#line 1269 "wish_yyparser.tab.c"
+#line 1275 "wish_yyparser.tab.c"
     break;
 
 
-#line 1273 "wish_yyparser.tab.c"
+#line 1279 "wish_yyparser.tab.c"
 
       default: break;
     }
